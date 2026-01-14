@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Fanzz</title>
+    <style>
+        /* --- CORE iOS STYLE --- */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            background-color: #f2f2f7; font-family: -apple-system, BlinkMacSystemFont, sans-serif; overflow: hidden;
+        }
+
+        .app-shell { display: flex; flex-direction: column; height: 100vh; width: 100%; }
+
+        /* HEADER */
+        .ios-header {
+            padding: 60px 25px 20px; background: rgba(242, 242, 247, 0.85);
+            backdrop-filter: blur(25px); position: sticky; top: 0; z-index: 100;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .ios-header h1 { font-size: 30px; font-weight: 800; margin: 0; letter-spacing: -1px; transition: 0.3s; }
+        .avatar-top { width: 40px; height: 40px; border-radius: 50%; background: url('https://i.pravatar.cc/100?img=12') center/cover; border: 1px solid rgba(0,0,0,0.1); transition: 0.3s; }
+        .avatar-top.hidden { opacity: 0; transform: scale(0.5); }
+
+        /* CONTENT AREA */
+        .scroll-area { flex: 1; overflow-y: auto; position: relative; }
+        .view-section { display: none; padding: 20px; animation: ios-fade-up 0.5s ease; padding-bottom: 120px; }
+        .view-section.active { display: block; }
+
+        /* KUNCI DASHBOARD */
+        #lock-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 10000;
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center; color: white; padding: 30px;
+            animation: lockFadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        @keyframes lockFadeIn { from { opacity: 0; transform: scale(1.2); } to { opacity: 1; transform: scale(1); } }
+
+        /* NOTIFIKASI BANNER iOS */
+        #msg-box {
+            position: fixed; top: -120px; left: 50%; transform: translateX(-50%);
+            width: 90%; max-width: 400px; background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px); padding: 15px 20px; border-radius: 25px;
+            z-index: 9999; box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+            display: flex; align-items: center; gap: 12px;
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            border: 0.5px solid rgba(0,0,0,0.05);
+        }
+        #msg-box.show { top: 20px; }
+        .notif-icon { width: 35px; height: 35px; background: #007aff; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; }
+        .notif-content b { display: block; font-size: 11px; color: #007aff; text-transform: uppercase; letter-spacing: 0.5px; }
+        .notif-content p { margin: 0; font-size: 14px; color: #1c1c1e; font-weight: 600; }
+
+        /* UI COMPONENTS */
+        .img-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        .img-item img { width: 100%; border-radius: 22px; box-shadow: 0 8px 20px rgba(0,0,0,0.06); display: block; }
+        
+        #website-view.active { display: flex; flex-direction: column; justify-content: center; min-height: 80%; }
+        .web-container { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 400px; margin: 0 auto; }
+        .web-card { background: white; border-radius: 22px; padding: 16px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 15px rgba(0,0,0,0.03); text-decoration: none; color: inherit; transition: 0.2s; }
+        .web-card:active { transform: scale(0.97); background: #f2f2f7; }
+        .web-icon { width: 45px; height: 45px; margin-right: 15px; border-radius: 12px; object-fit: cover; background: #f2f2f7; }
+
+        /* TAB BAR */
+        .tab-bar { position: fixed; bottom: 0; width: 100%; height: 100px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(30px); display: flex; justify-content: space-around; padding-top: 15px; border-top: 0.5px solid rgba(0,0,0,0.1); z-index: 500; }
+        .tab-item { display: flex; flex-direction: column; align-items: center; color: #8e8e93; width: 33%; cursor: pointer; transition: 0.3s; }
+        .tab-item.active { color: #007aff; }
+        .tab-icon { width: 28px; height: 28px; margin-bottom: 5px; background-size: contain; background-repeat: no-repeat; opacity: 0.4; }
+        .tab-item.active .tab-icon { opacity: 1; filter: drop-shadow(0 0 5px rgba(0,122,255,0.3)); }
+        .icon-home { background-image: url('https://cdn-icons-png.flaticon.com/512/1946/1946436.png'); }
+        .icon-web { background-image: url('https://cdn-icons-png.flaticon.com/512/1006/1006771.png'); }
+        .icon-user { background-image: url('https://cdn-icons-png.flaticon.com/512/1077/1077063.png'); }
+
+        @keyframes ios-fade-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <div id="lock-screen">
+        <div style="font-size: 80px; margin-bottom: 20px;">🔒</div>
+        <div style="font-size: 24px; font-weight: 800; margin-bottom: 10px;">Akses Ditangguhkan</div>
+        <div style="font-size: 15px; opacity: 0.6; line-height: 1.5;">apk ini sedang dikunci oleh admin.<br>Hubungi pemilik aplikasi untuk akses.</div>
+    </div>
+
+    <div id="msg-box" onclick="this.classList.remove('show')">
+        <div class="notif-icon">🔔</div>
+        <div class="notif-content">
+            <b>Pesan Baru</b>
+            <p id="display-msg">Menunggu pesan...</p>
+        </div>
+        <div style="color:#ccc; font-size: 20px; margin-left: 120px;">✕</div>
+    </div>
+
+    <div class="app-shell">
+        <header class="ios-header">
+            <h1 id="page-title">Home</h1>
+            <div id="top-logo" class="avatar-top"></div>
+        </header>
+
+        <main class="scroll-area">
+            <div id="home-view" class="view-section active">
+                <div class="img-grid" id="realtime-img-container"></div>
+            </div>
+
+            <div id="website-view" class="view-section">
+                <div class="web-container" id="realtime-web-container"></div>
+            </div>
+
+            <div id="profil-view" class="view-section">
+                <div style="text-align:center; padding: 20px 0;">
+                    <div style="width:110px; height:110px; border-radius:50%; background:url('https://i.pravatar.cc/300?img=12') center/cover; margin:0 auto 15px; border:4px solid white; box-shadow:0 10px 25px rgba(0,0,0,0.1);"></div>
+                    <h2 style="margin:0; font-size: 22px;">Fanzz</h2>
+                    <p style="color:#8e8e93; font-size: 14px;">Fitur masih beta</p>
+                </div>
+                <div style="background:white; border-radius:22px; padding:20px; margin-top:10px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+                    <p style="margin: 10px 0; font-size: 17px;"><b>Developer:</b> Fanzz</p>
+                    <p style="margin: 19px 0; font-size: 17px;"><b>Produk:</b> Free fire</p>
+                    <a href="https://wa.me/6285808608116" style="background:#25D366; color:white; display:flex; justify-content:center; padding:16px; border-radius:18px; text-decoration:none; font-weight:700; margin-top:20px; font-size: 19px;">WhatsApp</a>
+                </div>
+            </div>
+        </main>
+
+        <nav class="tab-bar">
+            <div class="tab-item active" onclick="navigate(this, 'home')"><div class="tab-icon icon-home"></div><span>Home</span></div>
+            <div class="tab-item" onclick="navigate(this, 'website')"><div class="tab-icon icon-web"></div><span>Website</span></div>
+            <div class="tab-item" onclick="navigate(this, 'profil')"><div class="tab-icon icon-user"></div><span>Profil</span></div>
+        </nav>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // CONFIG FIREBASE
+        const firebaseConfig = {
+            apiKey: "AIzaSyCAbeMz27lJlUYVy6H63kDBvg3eoKMlDCo",
+    authDomain: "fanzz-5ee83.firebaseapp.com",
+    projectId: "fanzz-5ee83",
+    storageBucket: "fanzz-5ee83.firebasestorage.app",
+    messagingSenderId: "926456459633",
+    appId: "1:926456459633:web:3f50d9aa8b614ea8ebc6d0",
+    measurementId: "G-854DLDJWCP"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // VARIABEL GLOBAL UNTUK NAMA APLIKASI
+        window.appDisplayName = "Home";
+
+        onSnapshot(doc(db, "app_data", "content"), (docSnap) => {
+            const data = docSnap.data();
+            if (!data) return;
+
+            // 1. Simpan Nama Aplikasi dari Admin
+            window.appDisplayName = data.title || "Home";
+            
+            // 2. Update Judul Header Dinamis (Hanya jika di tab Home)
+            const currentTabLabel = document.querySelector('.tab-item.active span').innerText;
+            if(currentTabLabel === "Home") {
+                document.getElementById('page-title').innerText = window.appDisplayName;
+            }
+
+            // 3. Kontrol Kunci Dashboard
+            const lockScreen = document.getElementById('lock-screen');
+            lockScreen.style.display = data.isLocked ? "flex" : "none";
+
+            // 4. Notifikasi Banner
+            const msgBox = document.getElementById('msg-box');
+            if (data.user_message && data.user_message.text) {
+                document.getElementById('display-msg').innerText = data.user_message.text;
+                msgBox.classList.add('show');
+                
+                // Getar jika ada pesan baru
+                const lastMsg = localStorage.getItem('last_msg_time');
+                if(lastMsg != data.user_message.timestamp) {
+                    if (window.navigator.vibrate) window.navigator.vibrate(200);
+                    localStorage.setItem('last_msg_time', data.user_message.timestamp);
+                }
+            } else {
+                msgBox.classList.remove('show');
+            }
+
+            // 5. Update Konten Gambar
+            document.getElementById('realtime-img-container').innerHTML = `
+                <div class="img-item"><img src="${data.img1}"></div>
+                <div class="img-item"><img src="${data.img2}"></div>
+                <div class="img-item"><img src="${data.img3}"></div>
+            `;
+
+            // 6. Update Tombol Website
+            const webContainer = document.getElementById('realtime-web-container');
+            if(data.links) {
+                webContainer.innerHTML = "";
+                for(let i=1; i<=4; i++) {
+                    const btn = data.links[`btn${i}`];
+                    if(btn && btn.name) {
+                        webContainer.innerHTML += `
+                            <a href="${btn.link}" target="_blank" class="web-card">
+                                <div style="display:flex; align-items:center;">
+                                    <img src="${btn.icon}" class="web-icon" onerror="this.src='https://cdn-icons-png.flaticon.com/512/1006/1006771.png'">
+                                    <div style="display:flex; flex-direction:column;">
+                                        <b style="font-size:15px;">${btn.name}</b>
+                                        <span style="font-size:12px; color:#8e8e93;">Buka Layanan</span>
+                                    </div>
+                                </div>
+                                <div style="color:#d1d1d6; font-size:20px;">›</div>
+                            </a>`;
+                    }
+                }
+            }
+        });
+
+        // FUNGSI NAVIGASI TAB
+        window.navigate = (el, target) => {
+            // Aktifkan Tab
+            document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+
+            // Ganti View
+            document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+            document.getElementById(target + '-view').classList.add('active');
+
+            // UPDATE TEKS HEADER SESUAI RUANGAN
+            const pageTitle = document.getElementById('page-title');
+            const topLogo = document.getElementById('top-logo');
+
+            if (target === 'home') {
+                pageTitle.innerText = window.appDisplayName;
+                topLogo.classList.remove('hidden');
+            } else if (target === 'website') {
+                pageTitle.innerText = "Website";
+                topLogo.classList.add('hidden');
+            } else if (target === 'profil') {
+                pageTitle.innerText = "Profil";
+                topLogo.classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+</html>
